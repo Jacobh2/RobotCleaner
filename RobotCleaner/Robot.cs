@@ -77,20 +77,6 @@ namespace RobotCleaner
             return uniqueLocations.Count;
         }
 
-        private int CheckPosition(int pos)
-        {
-            if (pos > MAX_POSITION)
-            {
-                return MAX_POSITION;
-            }
-            else if (pos < MIN_POSITION)
-            {
-                return MIN_POSITION;
-            }
-            return pos;
-        }
-
-
         public void Execute(string direction, int steps)
         {
             Tuple<int, int> currentLocation = Path.Last.Value;
@@ -113,8 +99,10 @@ namespace RobotCleaner
                     break;
             }
 
-            x = CheckPosition(x);
-            y = CheckPosition(y);
+            // We check the position to make sure we are within the
+            // allowed space given by the exercise (-100k <= pos <= 100k)
+            x = Math.Clamp(x, MIN_POSITION, MAX_POSITION);
+            y = Math.Clamp(y, MIN_POSITION, MAX_POSITION);
 
             Path.AddLast(new Tuple<int, int>(x, y));
         }
