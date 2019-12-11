@@ -16,4 +16,5 @@ RUN dotnet restore "RobotCleaner.Test/RobotCleaner.Test.csproj"
 COPY . .
 WORKDIR "/tests/RobotCleaner.Test"
 RUN dotnet build "RobotCleaner.Test.csproj" -c Release -o /app/tests/build;
-RUN dotnet vstest /app/tests/build/RobotCleaner.Test.dll
+
+CMD ["dotnet", "vstest", "/app/tests/build/RobotCleaner.Test.dll"]
