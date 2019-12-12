@@ -68,20 +68,37 @@ namespace RobotCleaner
                     break;
             }
 
-            // We check the position to make sure we are within the
-            // allowed space given by the exercise (-100k <= pos <= 100k)
             x = Math.Clamp(x, MIN_POSITION, MAX_POSITION);
             y = Math.Clamp(y, MIN_POSITION, MAX_POSITION);
 
+            //Only loop any intermediate locations if we are not at any wall
+            // and are heading in that direction
+            if (CurrentLocation.Item1 == MAX_POSITION && dx == 1 || CurrentLocation.Item1 == MIN_POSITION && dx == -1)
+            {
+                stepsX = 0;
+            }
+
+            if (CurrentLocation.Item2 == MAX_POSITION && dy == 1 || CurrentLocation.Item2 == MIN_POSITION && dy == -1)
+            {
+                stepsY = 0;
+            }
+
             Tuple<int, int> intermediateLocation;
+
+            int intermediateLocationX;
             for (int i = 1; i < stepsX; ++i)
             {
-                intermediateLocation = new Tuple<int, int>(CurrentLocation.Item1 + i * dx, CurrentLocation.Item2);
+                intermediateLocationX = Math.Clamp(CurrentLocation.Item1 + i * dx, MIN_POSITION, MAX_POSITION);
+                intermediateLocation = new Tuple<int, int>(intermediateLocationX, CurrentLocation.Item2);
                 UniquePositions.Add(intermediateLocation);
             }
+
+            int intermediateLocationY;
             for (int i = 1; i < stepsY; ++i)
             {
-                intermediateLocation = new Tuple<int, int>(CurrentLocation.Item1, CurrentLocation.Item2 + i * dy);
+
+                intermediateLocationY = Math.Clamp(CurrentLocation.Item2 + i * dy, MIN_POSITION, MAX_POSITION);
+                intermediateLocation = new Tuple<int, int>(CurrentLocation.Item1, intermediateLocationY);
                 UniquePositions.Add(intermediateLocation);
             }
 
