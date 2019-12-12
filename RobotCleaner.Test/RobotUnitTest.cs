@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Xunit;
 
 namespace RobotCleaner.Test
@@ -13,7 +14,7 @@ namespace RobotCleaner.Test
 
             robot.Execute("S", 1);
 
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
@@ -24,7 +25,7 @@ namespace RobotCleaner.Test
 
             robot.Execute("N", 1);
 
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
@@ -35,7 +36,7 @@ namespace RobotCleaner.Test
 
             robot.Execute("E", 1);
 
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
@@ -46,7 +47,7 @@ namespace RobotCleaner.Test
 
             robot.Execute("W", 1);
 
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
@@ -58,7 +59,7 @@ namespace RobotCleaner.Test
             robot.Execute("S", 1);
             robot.Execute("N", 1);
 
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
@@ -69,7 +70,7 @@ namespace RobotCleaner.Test
 
             robot.Execute("S", 1);
 
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
@@ -80,7 +81,7 @@ namespace RobotCleaner.Test
 
             robot.Execute("N", 1);
 
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
@@ -97,7 +98,7 @@ namespace RobotCleaner.Test
         }
 
         [Fact]
-        public void AnotherTest()
+        public void SmallTest()
         {
             Robot robot = new Robot(10, 22);
             Tuple<int, int> finalLocation = new Tuple<int, int>(12, 21);
@@ -106,7 +107,26 @@ namespace RobotCleaner.Test
             robot.Execute("N", 1);
 
             Assert.Equal(4, robot.GetUniquePositions());
-            Assert.Equal(finalLocation, robot.CurrentPosition);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
+        }
+
+        [Fact]
+        public void BigTest()
+        {
+            Robot robot = new Robot(10, 22);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(-47650, -16789);
+
+            Random rnd = new Random(1337);
+            string[] directions = new string[] { "E", "W", "S", "N" };
+
+            for (int i = 0; i < 100; ++i)
+            {
+                string direction = directions.OrderBy(x => rnd.Next()).Take(1).First();
+                robot.Execute(direction, rnd.Next(0, 100000));
+            }
+
+            Assert.Equal(3467602, robot.GetUniquePositions());
+            Assert.Equal(finalLocation, robot.CurrentLocation);
         }
     }
 }

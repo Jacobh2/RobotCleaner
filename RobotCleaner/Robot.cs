@@ -16,86 +16,55 @@ namespace RobotCleaner
         public const int MIN_POSITION = -100000;
 
         /// <summary>
-        /// Linked list of steps taken by the robot
+        /// HashSet that holds all unique positions
         /// </summary>
-        private readonly LinkedList<Tuple<int, int>> Path = new LinkedList<Tuple<int, int>>();
+        private readonly HashSet<Tuple<int, int>> UniquePositions = new HashSet<Tuple<int, int>>();
+
+        public Tuple<int, int> CurrentLocation { get; private set; }
 
 
         public Robot(int startCoordinateX, int startCoordinateY)
         {
             //Add the start position
-            var startLocation = new Tuple<int, int>(startCoordinateX, startCoordinateY);
-            Path.AddLast(startLocation);
+            CurrentLocation = new Tuple<int, int>(startCoordinateX, startCoordinateY);
+            UniquePositions.Add(CurrentLocation);
         }
-
-        public Tuple<int, int> CurrentPosition => Path.Last.Value;
 
         public int GetUniquePositions()
         {
-
-            HashSet<Tuple<int, int>> uniqueLocations = new HashSet<Tuple<int, int>>();
-
-            Tuple<int, int> lastLocation = Path.First.Value;
-            //The start position is unique
-            uniqueLocations.Add(lastLocation);
-
-            int steps;
-            int multiplier;
-            Tuple<int, int> intermediateLocation;
-
-            foreach (Tuple<int, int> location in Path)
-            {
-                if (location.Equals(lastLocation))
-                {
-                    continue;
-                }
-
-                //Check if it was the X value that was changed
-                if (location.Item1 != lastLocation.Item1)
-                {
-                    multiplier = lastLocation.Item1 > location.Item1 ? 1 : -1;
-                    steps = Math.Abs(lastLocation.Item1 - location.Item1);
-                    for (int i = 0; i < steps; ++i)
-                    {
-                        intermediateLocation = new Tuple<int, int>(location.Item1 + i * multiplier, location.Item2);
-                        uniqueLocations.Add(intermediateLocation);
-                    }
-                }
-                else
-                {
-                    multiplier = lastLocation.Item1 > location.Item1 ? 1 : -1;
-                    steps = Math.Abs(lastLocation.Item2 - location.Item2);
-                    for (int i = 0; i < steps; ++i)
-                    {
-                        intermediateLocation = new Tuple<int, int>(location.Item1, location.Item2 + i * multiplier);
-                        uniqueLocations.Add(intermediateLocation);
-                    }
-                }
-                lastLocation = location;
-            }
-
-            return uniqueLocations.Count;
+            return UniquePositions.Count;
         }
 
         public void Execute(string direction, int steps)
         {
-            Tuple<int, int> currentLocation = Path.Last.Value;
-            int x = currentLocation.Item1;
-            int y = currentLocation.Item2;
+            int x = CurrentLocation.Item1;
+            int y = CurrentLocation.Item2;
+            int stepsX = 0;
+            int stepsY = 0;
+            int dx = 1;
+            int dy = 1;
 
             switch (direction)
             {
                 case "E":
                     x += steps;
+                    stepsX = steps;
+                    dx = 1;
                     break;
                 case "W":
                     x -= steps;
+                    stepsX = steps;
+                    dx = -1;
                     break;
                 case "S":
                     y += steps;
+                    stepsY = steps;
+                    dy = 1;
                     break;
                 case "N":
                     y -= steps;
+                    stepsY = steps;
+                    dy = -1;
                     break;
             }
 
@@ -104,7 +73,20 @@ namespace RobotCleaner
             x = Math.Clamp(x, MIN_POSITION, MAX_POSITION);
             y = Math.Clamp(y, MIN_POSITION, MAX_POSITION);
 
-            Path.AddLast(new Tuple<int, int>(x, y));
+            Tuple<int, int> intermediateLocation;
+            for (int i = 1; i < stepsX; ++i)
+            {
+                intermediateLocation = new Tuple<int, int>(CurrentLocation.Item1 + i * dx, CurrentLocation.Item2);
+                UniquePositions.Add(intermediateLocation);
+            }
+            for (int i = 1; i < stepsY; ++i)
+            {
+                intermediateLocation = new Tuple<int, int>(CurrentLocation.Item1, CurrentLocation.Item2 + i * dy);
+                UniquePositions.Add(intermediateLocation);
+            }
+
+            CurrentLocation = new Tuple<int, int>(x, y);
+            UniquePositions.Add(CurrentLocation);
         }
 
     }
