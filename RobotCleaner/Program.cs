@@ -7,7 +7,6 @@ namespace RobotCleaner
     {
         static void Main(string[] args)
         {
-
             int numCommands = Convert.ToInt32(Console.ReadLine());
             int[] startCoordinates = Console.ReadLine().Split(' ').Select(x => Convert.ToInt32(x)).ToArray();
 
