@@ -165,7 +165,6 @@ namespace RobotCleaner.Test
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
-        /*
         [Fact]
         public void Use10000Steps()
         {
@@ -187,6 +186,5 @@ namespace RobotCleaner.Test
             Assert.Equal(400001, robot.UniquePositionCount);
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
-        */
     }
 }

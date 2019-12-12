@@ -10,7 +10,7 @@ namespace RobotCleaner
         public const int DIRECTION_POSITIVE = 1;
         public const int DIRECTION_NEGATIVE = -1;
 
-        private readonly HashSet<string> UniquePositions = new HashSet<string>();
+        private readonly HashSet<long> UniquePositions = new HashSet<long>();
         private int CurrentLocationX;
         private int CurrentLocationY;
 
@@ -18,7 +18,15 @@ namespace RobotCleaner
         {
             CurrentLocationX = startCoordinateX;
             CurrentLocationY = startCoordinateY;
-            UniquePositions.Add(startCoordinateX + "," + startCoordinateY);
+            AddLocation(CurrentLocationX, CurrentLocationY);
+        }
+
+        private void AddLocation(int x, int y)
+        {
+            // Pairing function for efficient hash
+            // of two numbers without collision
+            long tmp = 100000L + y + ((x + 100001) / 2);
+            UniquePositions.Add(x + (tmp * tmp));
         }
 
         public int UniquePositionCount => UniquePositions.Count;
@@ -60,17 +68,17 @@ namespace RobotCleaner
             for (int i = 1; i < stepsX; ++i)
             {
                 intermediateLocationX = CurrentLocationX + i * dx;
-                UniquePositions.Add(intermediateLocationX + "," + CurrentLocationY);
+                AddLocation(intermediateLocationX, CurrentLocationY);
             }
 
             int intermediateLocationY;
             for (int i = 1; i < stepsY; ++i)
             {
                 intermediateLocationY = CurrentLocationY + i * dy;
-                UniquePositions.Add(CurrentLocationX + "," + intermediateLocationY);
+                AddLocation(CurrentLocationX, intermediateLocationY);
             }
 
-            UniquePositions.Add(x + "," + y);
+            AddLocation(x, y);
             CurrentLocationX = x;
             CurrentLocationY = y;
         }
