@@ -5,6 +5,7 @@ if [ $? -eq 0 ]; then
     echo "Build OK"
 else
     echo "Failed to build"
+    exit 1
 fi
 
 docker run --rm -it robotcleanertests
