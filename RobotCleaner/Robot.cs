@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace RobotCleaner
 {
@@ -18,16 +19,17 @@ namespace RobotCleaner
         {
             _currentLocationX = startCoordinateX;
             _currentLocationY = startCoordinateY;
-            AddLocation(_currentLocationX, _currentLocationY);
+            _uniquePositions.Add(GetHash(_currentLocationX, _currentLocationY));
         }
 
         public int UniquePositionCount => _uniquePositions.Count;
 
         public Tuple<int, int> CurrentLocation => new Tuple<int, int>(_currentLocationX, _currentLocationY);
 
-        private void AddLocation(long x, long y)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private long GetHash(long x, long y)
         {
-            _uniquePositions.Add((x+100_000)*1_000_000 + y + 100_000);
+            return (x+100_000)*1_000_000 + y + 100_000;
         }
 
         public void Execute(string direction, int steps)
@@ -65,17 +67,17 @@ namespace RobotCleaner
             for (int i = 1; i < stepsX; ++i)
             {
                 intermediateLocationX = _currentLocationX + i * dx;
-                AddLocation(intermediateLocationX, _currentLocationY);
+                _uniquePositions.Add(GetHash(intermediateLocationX, _currentLocationY));
             }
 
             int intermediateLocationY;
             for (int i = 1; i < stepsY; ++i)
             {
                 intermediateLocationY = _currentLocationY + i * dy;
-                AddLocation(_currentLocationX, intermediateLocationY);
+                _uniquePositions.Add(GetHash(_currentLocationX, intermediateLocationY));
             }
 
-            AddLocation(x, y);
+            _uniquePositions.Add(GetHash(x, y));
             _currentLocationX = x;
             _currentLocationY = y;
         }
