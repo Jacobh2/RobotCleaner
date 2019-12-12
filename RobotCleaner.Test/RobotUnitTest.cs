@@ -65,8 +65,8 @@ namespace RobotCleaner.Test
         [Fact]
         public void CannotMovePastMaximum()
         {
-            Robot robot = new Robot(Robot.MAX_POSITION, Robot.MAX_POSITION);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MAX_POSITION, Robot.MAX_POSITION);
+            Robot robot = new Robot(Robot.MAX_GRID_POSITION, Robot.MAX_GRID_POSITION);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MAX_GRID_POSITION, Robot.MAX_GRID_POSITION);
 
             robot.Execute("S", 1);
 
@@ -76,8 +76,8 @@ namespace RobotCleaner.Test
         [Fact]
         public void CannotMovePastMinumum()
         {
-            Robot robot = new Robot(Robot.MIN_POSITION, Robot.MIN_POSITION);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MIN_POSITION, Robot.MIN_POSITION);
+            Robot robot = new Robot(Robot.MIN_GRID_POSITION, Robot.MIN_GRID_POSITION);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MIN_GRID_POSITION, Robot.MIN_GRID_POSITION);
 
             robot.Execute("N", 1);
 
@@ -94,11 +94,11 @@ namespace RobotCleaner.Test
             robot.Execute("E", 1);
             robot.Execute("W", 1);
 
-            Assert.Equal(2, robot.GetUniquePositions());
+            Assert.Equal(2, robot.UniquePositionCount);
         }
 
         [Fact]
-        public void SmallTest()
+        public void TwoExecutions()
         {
             Robot robot = new Robot(10, 22);
             Tuple<int, int> finalLocation = new Tuple<int, int>(12, 21);
@@ -106,12 +106,12 @@ namespace RobotCleaner.Test
             robot.Execute("E", 2);
             robot.Execute("N", 1);
 
-            Assert.Equal(4, robot.GetUniquePositions());
+            Assert.Equal(4, robot.UniquePositionCount);
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
-        public void BigTest()
+        public void UseManyExecutions()
         {
             Robot robot = new Robot(10, 22);
             Tuple<int, int> finalLocation = new Tuple<int, int>(-47650, -16789);
@@ -125,12 +125,12 @@ namespace RobotCleaner.Test
                 robot.Execute(direction, rnd.Next(0, 100000));
             }
 
-            Assert.Equal(2584093, robot.GetUniquePositions());
+            Assert.Equal(2584093, robot.UniquePositionCount);
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
         [Fact]
-        public void LongSteps()
+        public void UseLongSteps()
         {
             Robot robot = new Robot(10, 22);
             Tuple<int, int> finalLocation = new Tuple<int, int>(90978, -1785);
@@ -144,7 +144,7 @@ namespace RobotCleaner.Test
                 robot.Execute(direction, rnd.Next(90000, 100000));
             }
 
-            Assert.Equal(484730, robot.GetUniquePositions());
+            Assert.Equal(484730, robot.UniquePositionCount);
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
 
@@ -161,8 +161,32 @@ namespace RobotCleaner.Test
             robot.Execute("S", 100000);
             robot.Execute("S", 100);
 
-            Assert.Equal(400001, robot.GetUniquePositions());
+            Assert.Equal(400001, robot.UniquePositionCount);
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
+
+        /*
+        [Fact]
+        public void Use10000Steps()
+        {
+            Robot robot = new Robot(0, 0);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
+
+            Random rnd = new Random(1337);
+            string[] directions = new string[] { "E", "W", "S", "N" };
+            int[] directionIndex = Enumerable.Range(0, 10000)
+                .Select(i => rnd.Next(0, 3)).ToArray();
+
+            int[] steps = Enumerable.Range(0, 10000).Select(i => rnd.Next(0, 100000)).ToArray();
+
+            for (int i = 0; i < 10000; ++i)
+            {
+                robot.Execute(directions[directionIndex[i]], steps[i]);
+            }
+
+            Assert.Equal(400001, robot.UniquePositionCount);
+            Assert.Equal(finalLocation, robot.CurrentLocation);
+        }
+        */
     }
 }
