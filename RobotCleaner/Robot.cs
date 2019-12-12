@@ -5,83 +5,79 @@ namespace RobotCleaner
 {
     public class Robot
     {
-        public const int MAX_GRID_POSITION = 100000;
-        public const int MIN_GRID_POSITION = -100000;
-        public const int DIRECTION_POSITIVE = 1;
-        public const int DIRECTION_NEGATIVE = -1;
+        public const int MaxGridPosition = 100_000;
+        public const int MinGridPosition = -100_000;
+        private const int DirectionPositive = 1;
+        private const int DirectionNegative = -1;
 
-        private readonly HashSet<long> UniquePositions = new HashSet<long>();
-        private int CurrentLocationX;
-        private int CurrentLocationY;
+        private readonly HashSet<long> _uniquePositions = new HashSet<long>();
+        private int _currentLocationX;
+        private int _currentLocationY;
 
         public Robot(int startCoordinateX, int startCoordinateY)
         {
-            CurrentLocationX = startCoordinateX;
-            CurrentLocationY = startCoordinateY;
-            AddLocation(CurrentLocationX, CurrentLocationY);
+            _currentLocationX = startCoordinateX;
+            _currentLocationY = startCoordinateY;
+            AddLocation(_currentLocationX, _currentLocationY);
         }
 
-        private void AddLocation(int x, int y)
+        public int UniquePositionCount => _uniquePositions.Count;
+
+        public Tuple<int, int> CurrentLocation => new Tuple<int, int>(_currentLocationX, _currentLocationY);
+
+        private void AddLocation(long x, long y)
         {
-            // Pairing function for efficient hash
-            // of two numbers without collision
-            long tmp = 100000L + y + ((x + 100001) / 2);
-            UniquePositions.Add(x + (tmp * tmp));
+            _uniquePositions.Add((x+100_000)*1_000_000 + y + 100_000);
         }
-
-        public int UniquePositionCount => UniquePositions.Count;
-
-        public Tuple<int, int> CurrentLocation => new Tuple<int, int>(CurrentLocationX, CurrentLocationY);
 
         public void Execute(string direction, int steps)
         {
-            int x = CurrentLocationX;
-            int y = CurrentLocationY;
-            int dx = DIRECTION_POSITIVE;
-            int dy = DIRECTION_POSITIVE;
+            int x = _currentLocationX;
+            int y = _currentLocationY;
+            int dx = DirectionPositive;
+            int dy = DirectionPositive;
             int stepsX = 0;
             int stepsY = 0;
 
             switch (direction)
             {
                 case "E":
-                    x = Math.Clamp(CurrentLocationX + steps, MIN_GRID_POSITION, MAX_GRID_POSITION);
-                    stepsX = x - CurrentLocationX;
+                    x = Math.Clamp(_currentLocationX + steps, MinGridPosition, MaxGridPosition);
+                    stepsX = x - _currentLocationX;
                     break;
                 case "W":
-                    x = Math.Clamp(CurrentLocationX - steps, MIN_GRID_POSITION, MAX_GRID_POSITION);
-                    stepsX = CurrentLocationX - x;
-                    dx = DIRECTION_NEGATIVE;
+                    x = Math.Clamp(_currentLocationX - steps, MinGridPosition, MaxGridPosition);
+                    stepsX = _currentLocationX - x;
+                    dx = DirectionNegative;
                     break;
                 case "S":
-                    y = Math.Clamp(CurrentLocationY + steps, MIN_GRID_POSITION, MAX_GRID_POSITION);
-                    stepsY = y - CurrentLocationY;
+                    y = Math.Clamp(_currentLocationY + steps, MinGridPosition, MaxGridPosition);
+                    stepsY = y - _currentLocationY;
                     break;
                 case "N":
-                    y = Math.Clamp(CurrentLocationY - steps, MIN_GRID_POSITION, MAX_GRID_POSITION);
-                    stepsY = CurrentLocationY - y;
-                    dy = DIRECTION_NEGATIVE;
+                    y = Math.Clamp(_currentLocationY - steps, MinGridPosition, MaxGridPosition);
+                    stepsY = _currentLocationY - y;
+                    dy = DirectionNegative;
                     break;
             }
 
             int intermediateLocationX;
             for (int i = 1; i < stepsX; ++i)
             {
-                intermediateLocationX = CurrentLocationX + i * dx;
-                AddLocation(intermediateLocationX, CurrentLocationY);
+                intermediateLocationX = _currentLocationX + i * dx;
+                AddLocation(intermediateLocationX, _currentLocationY);
             }
 
             int intermediateLocationY;
             for (int i = 1; i < stepsY; ++i)
             {
-                intermediateLocationY = CurrentLocationY + i * dy;
-                AddLocation(CurrentLocationX, intermediateLocationY);
+                intermediateLocationY = _currentLocationY + i * dy;
+                AddLocation(_currentLocationX, intermediateLocationY);
             }
 
             AddLocation(x, y);
-            CurrentLocationX = x;
-            CurrentLocationY = y;
+            _currentLocationX = x;
+            _currentLocationY = y;
         }
-
     }
 }

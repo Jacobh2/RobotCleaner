@@ -65,8 +65,8 @@ namespace RobotCleaner.Test
         [Fact]
         public void CannotMovePastMaximum()
         {
-            Robot robot = new Robot(Robot.MAX_GRID_POSITION, Robot.MAX_GRID_POSITION);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MAX_GRID_POSITION, Robot.MAX_GRID_POSITION);
+            Robot robot = new Robot(Robot.MaxGridPosition, Robot.MaxGridPosition);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MaxGridPosition, Robot.MaxGridPosition);
 
             robot.Execute("S", 1);
 
@@ -76,8 +76,8 @@ namespace RobotCleaner.Test
         [Fact]
         public void CannotMovePastMinumum()
         {
-            Robot robot = new Robot(Robot.MIN_GRID_POSITION, Robot.MIN_GRID_POSITION);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MIN_GRID_POSITION, Robot.MIN_GRID_POSITION);
+            Robot robot = new Robot(Robot.MinGridPosition, Robot.MinGridPosition);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(Robot.MinGridPosition, Robot.MinGridPosition);
 
             robot.Execute("N", 1);
 
