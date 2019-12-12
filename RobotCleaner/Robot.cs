@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RobotCleaner
 {
@@ -14,7 +13,6 @@ namespace RobotCleaner
         private readonly HashSet<string> UniquePositions = new HashSet<string>();
         private int CurrentLocationX;
         private int CurrentLocationY;
-
 
         public Robot(int startCoordinateX, int startCoordinateY)
         {
