@@ -44,54 +44,47 @@ namespace RobotCleaner
             return (x+100_000)*1_000_000 + y + 100_000;
         }
         
-        public Tuple<int, int> Execute(string direction, int steps, int locationX, int locationY)
+        public void Execute(string direction, int steps, int locationX, int locationY, out int newLocationX, out int newLocationY)
         {
-            //Don't do anything if we are at the edge
-            if (_isEdgeX && locationX == _maxGridPosition && direction.Equals("E"))
+            bool isOnEdgeX = _isEdgeX && locationX == _maxGridPosition && direction.Equals("E");
+            bool isOnEdgeY = _isEdgeY && locationY == _maxGridPosition && direction.Equals("S");
+            
+            if (isOnEdgeX || isOnEdgeY)
             {
-                return new Tuple<int, int>(locationX, locationY);
+                newLocationX = locationX;
+                newLocationY = locationY;
+                return;
             }
 
-            if (_isEdgeY && locationY == _maxGridPosition && direction.Equals("S"))
-            {
-                return new Tuple<int, int>(locationX, locationY);
-            }
-            //Add new action
-            Console.WriteLine($"In a region: Want to go {direction}{steps} from {locationX}, {locationY}");
             _actions.AddLast(new Tuple<int, int, string, int>(locationX, locationY, direction, steps));
-            //Update unique count and current location
-            var temp = CalculateUniqueCount();
-            Console.WriteLine($"This yielded {UniqueCount} unique positions with new location {temp}");
-            return temp;
+            CalculateUniqueCount(out newLocationX, out newLocationY);
         }
 
         private void Add(HashSet<long> uniqueLocations, int x, int y)
         {
-            Console.WriteLine($"Adding ({x},{y}). Now have {uniqueLocations.Count}");
             uniqueLocations.Add(GetHash(x, y));
-            Console.WriteLine($"After have {uniqueLocations.Count}");
         }
 
-        private Tuple<int, int> CalculateUniqueCount()
+        private void CalculateUniqueCount(out int newLocationX, out int newLocationY)
         {
             HashSet<long> uniqueLocations = new HashSet<long>();
             
-            Console.WriteLine($"This region is start region: {_isStartRegion}");
             if (_isStartRegion)
             {
                 Add(uniqueLocations,_startPosition.Item1, _startPosition.Item2);                
             }
-            
-            Tuple<int, int> currentLocation = null;
+
+            newLocationX = 0;
+            newLocationY = 0;
+
             foreach (Tuple<int, int, string, int> action in _actions)
             {    
-                currentLocation = CalculateSteps(action.Item1, action.Item2, action.Item3, action.Item4, uniqueLocations);
+                CalculateSteps(action.Item1, action.Item2, action.Item3, action.Item4, uniqueLocations, out newLocationX, out newLocationY);
             }
             UniqueCount = uniqueLocations.Count;
-            return currentLocation;
         }
 
-        public Tuple<int, int> CalculateSteps(int currentLocationX, int currentLocationY, string direction, int steps, HashSet<long> uniqueLocations)
+        public void CalculateSteps(int currentLocationX, int currentLocationY, string direction, int steps, HashSet<long> uniqueLocations, out int newX, out int newY)
         {
             int x = currentLocationX;
             int y = currentLocationY;
@@ -103,29 +96,24 @@ namespace RobotCleaner
             switch (direction)
             {
                 case "E":
-                    Console.WriteLine($"Will go E {steps} steps");
                     x += steps;
                     stepsX = x - currentLocationX;
                     break;
                 case "W":
-                    Console.WriteLine($"Will go W {steps} steps");
                     x -= steps;
                     stepsX = currentLocationX - x;
                     dx = DirectionNegative;
                     break;
                 case "S":
-                    Console.WriteLine($"Will go S {steps} steps");
                     y += steps;
                     stepsY = y - currentLocationY;
                     break;
                 case "N":
-                    Console.WriteLine($"Will go N {steps} steps");
                     y -= steps;
                     stepsY = currentLocationY - y;
                     dy = DirectionNegative;
                     break;
             }
-            Console.WriteLine($"In Region will go stepX {stepsX}, stepY {stepsY}. New x:{x}, new y:{y} from {currentLocationX}, {currentLocationY}");
 
             int intermediateLocationX;
             for (int i = 1; i < stepsX; ++i)
@@ -142,7 +130,8 @@ namespace RobotCleaner
             }
 
             Add(uniqueLocations,x, y);
-            return new Tuple<int, int>(x,y);
+            newX = x;
+            newY = y;
         }
 
         public override string ToString()

@@ -110,7 +110,6 @@ namespace RobotCleaner.Test
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
         
-        /*
         [Fact]
         public void UseManyExecutions()
         {
@@ -119,7 +118,7 @@ namespace RobotCleaner.Test
 
             Random rnd = new Random(1337);
             string[] directions = new string[] { "E", "W", "S", "N" };
-
+            
             for (int i = 0; i < 100; ++i)
             {
                 string direction = directions.OrderBy(x => rnd.Next()).Take(1).First();
@@ -129,7 +128,6 @@ namespace RobotCleaner.Test
             Assert.Equal(2584093, robot.UniquePositionCount());
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
-        */
         
         
          /*
@@ -175,7 +173,8 @@ namespace RobotCleaner.Test
         {
             int numberOfSteps = 10;
             Robot robot = new Robot(0, 0);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
+            //Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(70714, 100000);
 
             Random rnd = new Random(1337);
             string[] directions = new string[] { "E", "W", "S", "N" };
@@ -188,8 +187,9 @@ namespace RobotCleaner.Test
             {
                 robot.Execute(directions[directionIndex[i]], steps[i]);
             }
-
-            Assert.Equal(400001, robot.UniquePositionCount());
+            
+            // 400001 
+            Assert.Equal(269406, robot.UniquePositionCount());
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
     }

@@ -8,6 +8,9 @@ namespace RobotCleaner
     {
         static void Main(string[] args)
         {
+            Console.ReadLine();
+            TimeAlgorithm();
+            /*
             int numCommands = Convert.ToInt32(Console.ReadLine());
             int[] startCoordinates = Console.ReadLine().Split(' ').Select(x => Convert.ToInt32(x)).ToArray();
 
@@ -20,6 +23,48 @@ namespace RobotCleaner
             }
 
             Console.WriteLine($"=> Cleaned: {robot.UniquePositionCount()}");
+            */
+        }
+
+        private static void TimeAlgorithm()
+        {
+            /*
+             Using 20 
+             Running 1000 steps
+             Took 35.695913 seconds
+            
+             Using 20 
+             Running 100 steps
+             Took 0.585131 seconds
+             
+             Using 2
+             Running 100 steps
+             Took 1.572883 seconds
+             
+             Using 10
+             Running 100 steps
+             Took 0.657997 seconds
+
+
+            */
+            int numberOfSteps = 100;
+            Robot robot = new Robot(0, 0);
+            //Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(70714, 100000);
+
+            Random rnd = new Random(1337);
+            string[] directions = new string[] { "E", "W", "S", "N" };
+            int[] directionIndex = Enumerable.Range(0, numberOfSteps)
+                .Select(i => rnd.Next(0, 3)).ToArray();
+
+            int[] steps = Enumerable.Range(0, numberOfSteps).Select(i => rnd.Next(0, 100000)).ToArray();
+            DateTime start = DateTime.UtcNow;
+            Console.WriteLine($"Running {numberOfSteps} steps");
+            for (int i = 0; i < numberOfSteps; ++i)
+            {
+                robot.Execute(directions[directionIndex[i]], steps[i]);
+            }
+            Console.WriteLine($"Took {DateTime.UtcNow.Subtract(start).TotalSeconds} seconds");
         }
     }
 }
