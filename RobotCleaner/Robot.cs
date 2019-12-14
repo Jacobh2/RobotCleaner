@@ -8,7 +8,7 @@ namespace RobotCleaner
     {
         public const int MaxGridPosition = 100_000;
         public const int MinGridPosition = -100_000;
-        private const int NumberOfRegionsWide = 5;
+        private const int NumberOfRegionsWide = 2;
         private const int GridSize = (MaxGridPosition - MinGridPosition) / NumberOfRegionsWide;
 
         private readonly List<Region> _regions = new List<Region>();
@@ -59,7 +59,7 @@ namespace RobotCleaner
             }
         }
 
-        public int UniquePositionCount()
+        public long UniquePositionCount()
         {
             return _regions.Sum(region => region.GetUniqueCount);
         }
@@ -73,7 +73,6 @@ namespace RobotCleaner
 
         private bool SetNext(int newX, int newY)
         {
-            //Can we go right? If which case, get that region
             Region nextRegion = GetRegion(newX, newY);
             if (nextRegion == null)
             {
@@ -88,7 +87,6 @@ namespace RobotCleaner
             switch (direction)
             {
                 case "E":
-                    // Calculate max in the current regions direction
                     newX = _currentRegion.Square.Right + 1;
                     newY = _currentLocationY;
                     return Math.Clamp(_currentRegion.Square.Right - _currentLocationX, 0, steps);
@@ -119,10 +117,8 @@ namespace RobotCleaner
 
             while(steps > 0)
             {
-                // Calculate allowed steps in current region
                 stepsAllowed = CalculateAllowedSteps(direction, steps, out newX, out newY);
 
-                // If zero, update region to neighbor
                 if (stepsAllowed == 0)
                 {
                     if (SetNext(newX, newY))

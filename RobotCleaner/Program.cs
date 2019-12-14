@@ -8,9 +8,10 @@ namespace RobotCleaner
     {
         static void Main(string[] args)
         {
+            /*
             Console.ReadLine();
             TimeAlgorithm();
-            /*
+            */
             int numCommands = Convert.ToInt32(Console.ReadLine());
             int[] startCoordinates = Console.ReadLine().Split(' ').Select(x => Convert.ToInt32(x)).ToArray();
 
@@ -23,7 +24,6 @@ namespace RobotCleaner
             }
 
             Console.WriteLine($"=> Cleaned: {robot.UniquePositionCount()}");
-            */
         }
 
         private static void TimeAlgorithm()
@@ -47,7 +47,7 @@ namespace RobotCleaner
 
 
             */
-            int numberOfSteps = 100;
+            int numberOfSteps = 10000;
             Robot robot = new Robot(0, 0);
             //Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
             Tuple<int, int> finalLocation = new Tuple<int, int>(70714, 100000);

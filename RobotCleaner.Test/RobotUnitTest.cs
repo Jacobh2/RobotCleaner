@@ -111,46 +111,26 @@ namespace RobotCleaner.Test
         }
         
         [Fact]
-        public void UseManyExecutions()
+        public void TestLongSteps()
         {
-            Robot robot = new Robot(10, 22);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(-47650, -16789);
+            Robot robot = new Robot(-100_000, -100_000);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(30_000,-5_000);
 
-            Random rnd = new Random(1337);
-            string[] directions = new string[] { "E", "W", "S", "N" };
-            
-            for (int i = 0; i < 100; ++i)
-            {
-                string direction = directions.OrderBy(x => rnd.Next()).Take(1).First();
-                robot.Execute(direction, rnd.Next(0, 100000));
-            }
+            robot.Execute("E", 100_000);
+            robot.Execute("E", 100_000);
+            robot.Execute("S", 75_000);
+            robot.Execute("W", 50_000);
+            robot.Execute("N", 50_000);
+            robot.Execute("E", 60_000);
+            robot.Execute("N", 50_000);
+            robot.Execute("W", 80_000);
+            robot.Execute("S", 95_000);
+            robot.Execute("E", 10_000);
 
-            Assert.Equal(2584093, robot.UniquePositionCount());
+            Assert.Equal(635001, robot.UniquePositionCount());
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
         
-        
-         /*
-        [Fact]
-        public void UseLongSteps()
-        {
-            Robot robot = new Robot(10, 22);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(90978, -1785);
-
-            Random rnd = new Random(1337);
-            string[] directions = new string[] { "E", "W", "S", "N" };
-
-            for (int i = 0; i < 10; ++i)
-            {
-                string direction = directions.OrderBy(x => rnd.Next()).Take(1).First();
-                robot.Execute(direction, rnd.Next(90000, 100000));
-            }
-
-            Assert.Equal(484730, robot.UniquePositionCount());
-            Assert.Equal(finalLocation, robot.CurrentLocation);
-        }
-        */
-
         [Fact]
         public void GoFromEdgeToEdge()
         {
@@ -171,10 +151,9 @@ namespace RobotCleaner.Test
         [Fact]
         public void Use10000Steps()
         {
-            int numberOfSteps = 10;
+            int numberOfSteps = 10000;
             Robot robot = new Robot(0, 0);
-            //Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
-            Tuple<int, int> finalLocation = new Tuple<int, int>(70714, 100000);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
 
             Random rnd = new Random(1337);
             string[] directions = new string[] { "E", "W", "S", "N" };
@@ -188,8 +167,7 @@ namespace RobotCleaner.Test
                 robot.Execute(directions[directionIndex[i]], steps[i]);
             }
             
-            // 400001 
-            Assert.Equal(269406, robot.UniquePositionCount());
+            Assert.Equal(169373070, robot.UniquePositionCount());
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
     }

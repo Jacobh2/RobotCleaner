@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using QuadTrees.QTreeRect;
 
@@ -11,14 +12,10 @@ namespace RobotCleaner
         private const int DirectionPositive = 1;
         private const int DirectionNegative = -1;
         private readonly int _maxGridPosition;
-        
         public Square Square { get; }
-
-        private bool _isEdgeX;
-        private bool _isEdgeY;
-        // Holds start position (x, y), direction and steps for each action
-        private readonly LinkedList<Tuple<int, int, string, int>> _actions = new LinkedList<Tuple<int, int, string, int>>();
-        public int UniqueCount { get; private set; }
+        private readonly bool _isEdgeX;
+        private readonly bool _isEdgeY;
+        private readonly LinkedList<Path> _paths = new LinkedList<Path>();
         private bool _isStartRegion = false;
         private Tuple<int, int> _startPosition;
 
@@ -30,7 +27,7 @@ namespace RobotCleaner
             _maxGridPosition = maxGridPosition;
         }
 
-        public int GetUniqueCount => UniqueCount;
+        public long GetUniqueCount => _paths.Sum(x => x.UniqueLocationsCount);
 
         public void SetIsStartRegion(bool value, int x, int y)
         {
@@ -55,36 +52,51 @@ namespace RobotCleaner
                 newLocationY = locationY;
                 return;
             }
-
-            _actions.AddLast(new Tuple<int, int, string, int>(locationX, locationY, direction, steps));
+            Console.WriteLine($"Want to go {direction}{steps} from ({locationX},{locationY})");
+            //We need to check if this is a new path or not.
+            if (_paths.Last != null && locationX == _paths.Last.Value.EndLocationX && locationY == _paths.Last.Value.EndLocationY)
+            {
+                // Same path!
+                Console.WriteLine("This is a continuation on the previous path!");
+                _paths.Last.Value.AddAction(direction, steps);
+            }
+            else
+            {
+                Console.WriteLine("This is a new path");
+                //New path!
+                _paths.AddLast(new Path(locationX, locationY, direction, steps));
+            }
             CalculateUniqueCount(out newLocationX, out newLocationY);
-        }
-
-        private void Add(HashSet<long> uniqueLocations, int x, int y)
-        {
-            uniqueLocations.Add(GetHash(x, y));
         }
 
         private void CalculateUniqueCount(out int newLocationX, out int newLocationY)
         {
-            HashSet<long> uniqueLocations = new HashSet<long>();
+            // We will only re-calculate the last path
+            Path lastPath = _paths.Last.Value;
+            lastPath.UniqueLocations.Clear();
             
             if (_isStartRegion)
             {
-                Add(uniqueLocations,_startPosition.Item1, _startPosition.Item2);                
+                Console.WriteLine("Adding startposition!");
+                lastPath.UniqueLocations.Add(GetHash(_startPosition.Item1, _startPosition.Item2));
             }
 
-            newLocationX = 0;
-            newLocationY = 0;
-
-            foreach (Tuple<int, int, string, int> action in _actions)
+            newLocationX = lastPath.StartLocationX;
+            newLocationY = lastPath.StartLocationY;
+            
+            foreach (Tuple<string, int> action in lastPath.Actions)
             {    
-                CalculateSteps(action.Item1, action.Item2, action.Item3, action.Item4, uniqueLocations, out newLocationX, out newLocationY);
+                Console.WriteLine($"Adding action {action} from ({newLocationX},{newLocationY})");
+                CalculateSteps(newLocationX, newLocationY, action.Item1, action.Item2, lastPath.UniqueLocations, out newLocationX, out newLocationY);
+                lastPath.EndLocationX = newLocationX;
+                lastPath.EndLocationY = newLocationY;
+                Console.WriteLine($"New location: ({newLocationX},{newLocationY})");
             }
-            UniqueCount = uniqueLocations.Count;
+
+            lastPath.UniqueLocationsCount = lastPath.UniqueLocations.LongCount();
         }
 
-        public void CalculateSteps(int currentLocationX, int currentLocationY, string direction, int steps, HashSet<long> uniqueLocations, out int newX, out int newY)
+        private void CalculateSteps(int currentLocationX, int currentLocationY, string direction, int steps, HashSet<long> uniqueLocations, out int newX, out int newY)
         {
             int x = currentLocationX;
             int y = currentLocationY;
@@ -119,24 +131,19 @@ namespace RobotCleaner
             for (int i = 1; i < stepsX; ++i)
             {
                 intermediateLocationX = currentLocationX + i * dx;
-                Add(uniqueLocations, intermediateLocationX, currentLocationY);
+                uniqueLocations.Add(GetHash(intermediateLocationX, currentLocationY));
             }
 
             int intermediateLocationY;
             for (int i = 1; i < stepsY; ++i)
             {
                 intermediateLocationY = currentLocationY + i * dy;
-                Add(uniqueLocations,currentLocationX, intermediateLocationY);
+                uniqueLocations.Add(GetHash(currentLocationX, intermediateLocationY));
             }
 
-            Add(uniqueLocations,x, y);
+            uniqueLocations.Add(GetHash(x, y));
             newX = x;
             newY = y;
-        }
-
-        public override string ToString()
-        {
-            return $"({Square.Left},{Square.Top})->({Square.Right},{Square.Bottom})";
         }
     }
 }
