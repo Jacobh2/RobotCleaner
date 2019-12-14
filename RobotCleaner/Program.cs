@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 
 namespace RobotCleaner
@@ -18,7 +19,7 @@ namespace RobotCleaner
                 robot.Execute(direction[0], Convert.ToInt32(direction[1]));
             }
 
-            Console.WriteLine($"=> Cleaned: {robot.UniquePositionCount}");
+            Console.WriteLine($"=> Cleaned: {robot.UniquePositionCount()}");
         }
     }
 }
