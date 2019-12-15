@@ -135,6 +135,23 @@ namespace RobotCleaner.Test
         }
         
         [Fact]
+        public void TestLongSteps2()
+        {
+            Robot robot = new Robot(0, 0);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(0,0);
+
+            robot.Execute("E", 100_000);
+            robot.Execute("W", 50_000);
+            robot.Execute("S", 75_000);
+            
+            robot.Execute("W", 50_000);
+            robot.Execute("N", 75_000);
+
+            Assert.Equal(300_000, robot.UniquePositionCount());
+            Assert.Equal(finalLocation, robot.CurrentLocation);
+        }
+        
+        [Fact]
         public void GoFromEdgeToEdge()
         {
             Robot robot = new Robot(-100000, -100000);

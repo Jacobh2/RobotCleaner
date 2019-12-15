@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace RobotCleaner
 {
@@ -8,131 +8,104 @@ namespace RobotCleaner
     {
         public const int MaxGridPosition = 100_000;
         public const int MinGridPosition = -100_000;
-        private const int NumberOfRegionsWide = 50;
-        private const int GridSize = (MaxGridPosition - MinGridPosition) / NumberOfRegionsWide;
+        private const int DirectionPositive = 1;
+        private const int DirectionNegative = -1;
 
-        private readonly List<Region> _regions = new List<Region>();
-        private Region _currentRegion;
+        private readonly List<Line> _lines = new List<Line>();
         private int _currentLocationX;
         private int _currentLocationY;
+        private short _nextId = 0;
 
         public Robot(int startCoordinateX, int startCoordinateY)
         {
             _currentLocationX = startCoordinateX;
             _currentLocationY = startCoordinateY;
-            CreateRegions();
         }
-
-        private void CreateRegions()
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private long GetHash(long x, long y)
         {
-            for (int x = 0; x < NumberOfRegionsWide; ++x)
-            {
-                int upperLeftCornerX = MinGridPosition + GridSize * x;
-                var offsetX = x >= 1 ? 1 : 0;
-                for (int y = 0; y < NumberOfRegionsWide; ++y)
-                {
-                    var offsetY = y >= 1 ? 1 : 0;
-                    
-                    int upperLeftCornerY = MinGridPosition + GridSize * y;
-                    Square square = new Square(upperLeftCornerX+ offsetX, upperLeftCornerY+offsetY, upperLeftCornerX + GridSize, upperLeftCornerY + GridSize);
-                    Region region = new Region(square, MaxGridPosition);
-                    
-                    if (square.Contains(_currentLocationX, _currentLocationY))
-                    {
-                        _currentRegion = region;
-                        region.SetIsStartRegion(_currentLocationX, _currentLocationY);
-                    }
-                    _regions.Add(region);
-                }
-            }
+            return (x+100_000)*1_000_000 + y + 100_000;
         }
 
         public long UniquePositionCount()
         {
             long sum = 0;
-            foreach (var region in _regions)
+            HashSet<long> counted = new HashSet<long>();
+            foreach (Line lineA in _lines)
             {
-                //Console.WriteLine($"Region {region.Square} uniq: {region.GetUniqueCount}");
-                sum += region.GetUniqueCount;
+                Console.WriteLine($"\n>>> Line {lineA.Id} Length: {lineA.Length}. Sum={sum}");
+                sum += lineA.Length;
+                counted.Clear();
+                
+                //lineA.AddCoordinates(counted);
+                foreach (Line lineB in _lines)
+                {
+                    // Don't check against ourselves
+                    if (lineA.Id == lineB.Id)
+                    {
+                        continue;
+                    }
+                    
+                    Console.WriteLine($" *** Comparing to {lineB.Id} *** ");
+                    if (lineA.Intersect(lineB, out int x, out int y))
+                    {
+                        Console.WriteLine($"Intersect at ({x},{y})");
+                        //sum -= 1;
+                        counted.Add(GetHash(x, y));
+                    }
+                    else
+                    {
+                        Console.WriteLine("Overlapping!");
+                        lineA.AddOverlappingCoordinates(lineB, counted);
+                        Console.WriteLine($"Counted 2 {counted.Count}");
+                    }
+                }
+                Console.WriteLine($"Will remove {counted.Count}");
+                sum -= counted.Count;
             }
-
+            
             return sum;
         }
 
         public Tuple<int, int> CurrentLocation => new Tuple<int, int>(_currentLocationX, _currentLocationY);
 
-        private Region GetRegionForLocation(int x, int y)
+        public void Execute(string direction, int steps)
         {
-            return _regions.FirstOrDefault(region => region.Square.Contains(x, y));
-        }
-
-        private bool UpdateCurrentRegionForLocation(int newX, int newY)
-        {
-            Region nextRegion = GetRegionForLocation(newX, newY);
-            if (nextRegion == null)
-            {
-                return false;
-            }
-            _currentRegion = nextRegion;
-            return true;
-        }
-
-        private int CalculateAllowedSteps(string direction, int steps, out int newX, out int newY)
-        {
+            int newPositionX = _currentLocationX;
+            int newPositionY = _currentLocationY;
+            int dx = DirectionPositive;
+            int dy = DirectionPositive;
             switch (direction)
             {
                 case "E":
-                    newX = _currentRegion.Square.Right + 1;
-                    newY = _currentLocationY;
-                    return Math.Clamp(_currentRegion.Square.Right - _currentLocationX, 0, steps);
+                    newPositionX = Math.Clamp(_currentLocationX + steps, MinGridPosition, MaxGridPosition);
+                    steps = newPositionX - _currentLocationX;
+                    break;
                 case "W":
-                    newX = _currentRegion.Square.Left - 1;
-                    newY = _currentLocationY;
-                    return Math.Clamp(_currentLocationX - _currentRegion.Square.Left, 0, steps);
+                    newPositionX = Math.Clamp(_currentLocationX - steps, MinGridPosition, MaxGridPosition);
+                    steps = _currentLocationX - newPositionX;
+                    dx = DirectionNegative;
+                    break;
                 case "S":
-                    newX = _currentLocationX;
-                    newY = _currentRegion.Square.Bottom + 1;
-                    return Math.Clamp(_currentRegion.Square.Bottom - _currentLocationY, 0, steps);
+                    newPositionY = Math.Clamp(_currentLocationY + steps, MinGridPosition, MaxGridPosition);
+                    steps = newPositionY - _currentLocationY;
+                    break;
                 case "N":
-                    newX = _currentLocationX;
-                    newY = _currentRegion.Square.Top - 1;
-                    return Math.Clamp(_currentLocationY - _currentRegion.Square.Top, 0, steps);
-                default:
-                    newX = 0;
-                    newY = 0;
-                    return 0;
+                    newPositionY = Math.Clamp(_currentLocationY - steps, MinGridPosition, MaxGridPosition);
+                    steps = _currentLocationY - newPositionY;
+                    dy = DirectionNegative;
+                    break;
             }
-        }
 
-        public void Execute(string direction, int steps)
-        {
-            while(steps > 0)
+            if (steps == 0)
             {
-                //Console.WriteLine($"Execute, region is current: {_currentRegion.Square}. Want to go {steps} steps. Current location is ({_currentLocationX}, {_currentLocationY})");
-                int stepsAllowed = CalculateAllowedSteps(direction, steps, out int newX, out int newY);
-                //Console.WriteLine($"Steps allowed in this region: {stepsAllowed}");
-
-                if (stepsAllowed == 0)
-                {
-                    //Console.WriteLine($"Updating to next region at ({newX},{newY})");
-                    if (UpdateCurrentRegionForLocation(newX, newY))
-                    {
-                        //Console.WriteLine("Updating complete");
-                        continue;
-                    }
-                    //Console.WriteLine($"Updating failed, at end? {_currentRegion.Square}");
-                    return;
-                }
-                _currentRegion.Execute(direction, stepsAllowed, _currentLocationX, _currentLocationY, out _currentLocationX, out _currentLocationY);
-                
-                steps -= stepsAllowed;
-                
-                if (!UpdateCurrentRegionForLocation(_currentLocationX, _currentLocationY))
-                {
-                    return;
-                }
+                return;
             }
-            
+
+            _lines.Add(new Line(_currentLocationX, _currentLocationY, newPositionX, newPositionY, dx, dy, _nextId++));
+            _currentLocationX = newPositionX;;
+            _currentLocationY = newPositionY;
         }
     }
 }
