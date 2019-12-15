@@ -1,3 +1,5 @@
+using System;
+
 namespace RobotCleaner
 {
     public class Square
@@ -22,7 +24,9 @@ namespace RobotCleaner
 
         public bool Contains(int x, int y)
         {
-            return _topX <= x && x <= _bottomX && _topY <= y && y <= _bottomY;
+            bool ret = _topX <= x && x <= _bottomX && _topY <= y && y <= _bottomY;
+            //Console.WriteLine($"Square {this} contains ({x},{y}): {ret}");
+            return ret;
         }
 
         public override string ToString()

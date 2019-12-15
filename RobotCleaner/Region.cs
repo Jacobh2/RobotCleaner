@@ -20,6 +20,10 @@ namespace RobotCleaner
         private readonly LinkedList<Path> _paths = new LinkedList<Path>();
         private bool _isStartRegion;
         private Tuple<int, int> _startPosition;
+        
+        public HashSet<long> UniqueLocations = new HashSet<long>();
+        public long UniqueLocationsCount;
+        private bool _addStartPosition = false;
 
         public Region(Square square, int maxGridPosition)
         {
@@ -29,16 +33,13 @@ namespace RobotCleaner
             _maxGridPosition = maxGridPosition;
         }
 
-        public long GetUniqueCount => _paths.Sum(x => x.UniqueLocationsCount);
+        public long GetUniqueCount => UniqueLocationsCount + (_addStartPosition ? 1 : 0);
 
         public void SetIsStartRegion(int x, int y)
         {
-            Path startingPath = new Path(x, y, "E", 0);
-            startingPath.EndLocationX = x;
-            startingPath.EndLocationY = y;
-            startingPath.UniqueLocations.Add(GetHash(x, y));
-            startingPath.UniqueLocationsCount = startingPath.UniqueLocations.Count;
-            _paths.AddLast(startingPath);
+            _isStartRegion = true;
+            _startPosition = new Tuple<int, int>(x, y);
+            _addStartPosition = true;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,55 +59,57 @@ namespace RobotCleaner
                 newLocationY = locationY;
                 return;
             }
-            //We need to check if this is a new path or not.
+            
             if (_paths.Last != null && locationX == _paths.Last.Value.EndLocationX && locationY == _paths.Last.Value.EndLocationY)
             {
-                // Same path!
-                Console.WriteLine("This is a continuation on the previous path!");
+                //Console.WriteLine($">> Continuing path from {locationX}, {locationY}");
                 _paths.Last.Value.AddAction(direction, steps);
             }
             else
             {
-                // Only add this path if it already does not exist
+                //Console.WriteLine($">> Might want to add {direction}{steps} from ({locationX}, {locationY})");
                 Path newPath = new Path(locationX, locationY, direction, steps);
-                Console.WriteLine($"New path {newPath} already exist: {_paths.Contains(newPath)}");
                 if (!_paths.Contains(newPath))
                 {
-                    Console.WriteLine("This is a new path");
+                    //Console.WriteLine($">> New path from {locationX}, {locationY}");
                     //New path!
                     _paths.AddLast(newPath);    
                 }
                 else
                 {
-                    Console.WriteLine($"THIS PATH ALREADY EXIST!!");
+                    newLocationX = locationX;
+                    newLocationY = locationY;
+                    return;
                 }
-                
+
             }
-            Console.WriteLine($"_paths.Last for {Square.Top} END:{_paths.Last != null}");
-            
             CalculateUniqueCount(out newLocationX, out newLocationY);
         }
 
         private void CalculateUniqueCount(out int newLocationX, out int newLocationY)
         {
-            // We will only re-calculate the last path
-            Path lastPath = _paths.Last.Value;
-            lastPath.UniqueLocations.Clear();
-            
-            newLocationX = lastPath.StartLocationX;
-            newLocationY = lastPath.StartLocationY;
-            
-            foreach (Tuple<string, int> action in lastPath.Actions)
-            {    
-                Console.WriteLine($"Adding action {action} from ({newLocationX},{newLocationY})");
-                CalculateSteps(newLocationX, newLocationY, action.Item1, action.Item2, lastPath.UniqueLocations, out newLocationX, out newLocationY);
-                lastPath.EndLocationX = newLocationX;
-                lastPath.EndLocationY = newLocationY;
-                Console.WriteLine($"New location: ({newLocationX},{newLocationY}), UniqueLocations:{lastPath.UniqueLocations.Count}");
-            }
+            UniqueLocations.Clear();
+            newLocationX = 0;
+            newLocationY = 0;
 
-            lastPath.UniqueLocationsCount = lastPath.UniqueLocations.LongCount();
-            lastPath.UniqueLocations.Clear();
+            foreach (Path path in _paths)
+            {
+                newLocationX = path.StartLocationX;
+                newLocationY = path.StartLocationY;
+            
+                foreach (Tuple<string, int> action in path.Actions)
+                {    
+                    //Console.WriteLine($"Adding action {action} from ({newLocationX},{newLocationY})");
+                    CalculateSteps(newLocationX, newLocationY, action.Item1, action.Item2, UniqueLocations, out newLocationX, out newLocationY);
+                    path.EndLocationX = newLocationX;
+                    path.EndLocationY = newLocationY;
+                    //Console.WriteLine($"New location: ({newLocationX},{newLocationY}), UniqueLocations:{UniqueLocations.Count}");
+                }
+
+            }
+            
+            UniqueLocationsCount = UniqueLocations.LongCount();
+            UniqueLocations.Clear();
         }
 
         private void CalculateSteps(int currentLocationX, int currentLocationY, string direction, int steps, HashSet<long> uniqueLocations, out int newX, out int newY)
@@ -144,19 +147,30 @@ namespace RobotCleaner
             for (int i = 1; i < stepsX; ++i)
             {
                 intermediateLocationX = currentLocationX + i * dx;
-                uniqueLocations.Add(GetHash(intermediateLocationX, currentLocationY));
+                AddUniqueLocation(uniqueLocations, intermediateLocationX, currentLocationY);
             }
 
             int intermediateLocationY;
             for (int i = 1; i < stepsY; ++i)
             {
                 intermediateLocationY = currentLocationY + i * dy;
-                uniqueLocations.Add(GetHash(currentLocationX, intermediateLocationY));
+                AddUniqueLocation(uniqueLocations, currentLocationX, intermediateLocationY);
             }
 
-            uniqueLocations.Add(GetHash(x, y));
+            AddUniqueLocation(uniqueLocations, x, y);
             newX = x;
             newY = y;
+        }
+
+        private void AddUniqueLocation(HashSet<long> set, int x, int y)
+        {
+            //Console.WriteLine($"Maybe adding {x}, {y}");
+            if (_isStartRegion && _startPosition.Item1 == x && _startPosition.Item2 == y)
+            {
+                _addStartPosition = false;
+                return;
+            }
+            set.Add(GetHash(x, y));
         }
     }
 }

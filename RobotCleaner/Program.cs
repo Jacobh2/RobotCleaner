@@ -8,10 +8,8 @@ namespace RobotCleaner
     {
         static void Main(string[] args)
         {
-            /*
-            Console.ReadLine();
             TimeAlgorithm();
-            */
+            /*
             int numCommands = Convert.ToInt32(Console.ReadLine());
             int[] startCoordinates = Console.ReadLine().Split(' ').Select(x => Convert.ToInt32(x)).ToArray();
 
@@ -24,6 +22,7 @@ namespace RobotCleaner
             }
 
             Console.WriteLine($"=> Cleaned: {robot.UniquePositionCount()}");
+            */
         }
 
         private static void TimeAlgorithm()
@@ -58,6 +57,8 @@ namespace RobotCleaner
                 .Select(i => rnd.Next(0, 3)).ToArray();
 
             int[] steps = Enumerable.Range(0, numberOfSteps).Select(i => rnd.Next(0, 100000)).ToArray();
+            
+            Console.ReadLine();
             DateTime start = DateTime.UtcNow;
             Console.WriteLine($"Running {numberOfSteps} steps");
             for (int i = 0; i < numberOfSteps; ++i)

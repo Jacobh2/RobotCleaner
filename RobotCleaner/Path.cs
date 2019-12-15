@@ -14,8 +14,6 @@ namespace RobotCleaner
         
         public readonly IList<Tuple<string, int>> Actions = new List<Tuple<string, int>>();
         
-        public HashSet<long> UniqueLocations = new HashSet<long>();
-        public long UniqueLocationsCount = 0;
 
         public Path(int x, int y, string direction, int steps)
         {
@@ -35,7 +33,7 @@ namespace RobotCleaner
             // If parameter is null return false.
             if (obj == null)
             {
-                Console.WriteLine("obj is null");
+                //Console.WriteLine("obj is null");
                 return false;
             }
 
@@ -45,12 +43,12 @@ namespace RobotCleaner
             // Return true if the fields match:
             if (StartLocationX != p.StartLocationX || StartLocationY != p.StartLocationY)
             {
-                Console.WriteLine("Start loc is not same");
+                //Console.WriteLine("Start loc is not same");
                 return false;
             }
             
             bool ret = Actions.SequenceEqual(p.Actions);
-            Console.WriteLine($"ACtions are same {ret}");
+            //Console.WriteLine($"Actions are same {ret}");
             return ret;
         }
 

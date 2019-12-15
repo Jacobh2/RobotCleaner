@@ -8,7 +8,7 @@ namespace RobotCleaner
     {
         public const int MaxGridPosition = 100_000;
         public const int MinGridPosition = -100_000;
-        private const int NumberOfRegionsWide = 2;
+        private const int NumberOfRegionsWide = 50;
         private const int GridSize = (MaxGridPosition - MinGridPosition) / NumberOfRegionsWide;
 
         private readonly List<Region> _regions = new List<Region>();
@@ -52,7 +52,7 @@ namespace RobotCleaner
             long sum = 0;
             foreach (var region in _regions)
             {
-                Console.WriteLine($"Region {region.Square} uniq: {region.GetUniqueCount}");
+                //Console.WriteLine($"Region {region.Square} uniq: {region.GetUniqueCount}");
                 sum += region.GetUniqueCount;
             }
 
@@ -108,16 +108,19 @@ namespace RobotCleaner
         {
             while(steps > 0)
             {
-                Console.WriteLine($"Execute, region is current: {_currentRegion.Square}");
-                var stepsAllowed = CalculateAllowedSteps(direction, steps, out int newX, out int newY);
+                //Console.WriteLine($"Execute, region is current: {_currentRegion.Square}. Want to go {steps} steps. Current location is ({_currentLocationX}, {_currentLocationY})");
+                int stepsAllowed = CalculateAllowedSteps(direction, steps, out int newX, out int newY);
+                //Console.WriteLine($"Steps allowed in this region: {stepsAllowed}");
 
                 if (stepsAllowed == 0)
                 {
+                    //Console.WriteLine($"Updating to next region at ({newX},{newY})");
                     if (UpdateCurrentRegionForLocation(newX, newY))
                     {
+                        //Console.WriteLine("Updating complete");
                         continue;
                     }
-
+                    //Console.WriteLine($"Updating failed, at end? {_currentRegion.Square}");
                     return;
                 }
                 _currentRegion.Execute(direction, stepsAllowed, _currentLocationX, _currentLocationY, out _currentLocationX, out _currentLocationY);
