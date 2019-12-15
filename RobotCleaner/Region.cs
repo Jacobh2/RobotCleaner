@@ -31,10 +31,14 @@ namespace RobotCleaner
 
         public long GetUniqueCount => _paths.Sum(x => x.UniqueLocationsCount);
 
-        public void SetIsStartRegion(bool value, int x, int y)
+        public void SetIsStartRegion(int x, int y)
         {
-            _isStartRegion = value;
-            _startPosition = new Tuple<int, int>(x, y);
+            Path startingPath = new Path(x, y, "E", 0);
+            startingPath.EndLocationX = x;
+            startingPath.EndLocationY = y;
+            startingPath.UniqueLocations.Add(GetHash(x, y));
+            startingPath.UniqueLocationsCount = startingPath.UniqueLocations.Count;
+            _paths.AddLast(startingPath);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,12 +93,6 @@ namespace RobotCleaner
             Path lastPath = _paths.Last.Value;
             lastPath.UniqueLocations.Clear();
             
-            if (_isStartRegion)
-            {
-                Console.WriteLine("Adding startposition!");
-                lastPath.UniqueLocations.Add(GetHash(_startPosition.Item1, _startPosition.Item2));
-            }
-
             newLocationX = lastPath.StartLocationX;
             newLocationY = lastPath.StartLocationY;
             
@@ -104,10 +102,11 @@ namespace RobotCleaner
                 CalculateSteps(newLocationX, newLocationY, action.Item1, action.Item2, lastPath.UniqueLocations, out newLocationX, out newLocationY);
                 lastPath.EndLocationX = newLocationX;
                 lastPath.EndLocationY = newLocationY;
-                Console.WriteLine($"New location: ({newLocationX},{newLocationY})");
+                Console.WriteLine($"New location: ({newLocationX},{newLocationY}), UniqueLocations:{lastPath.UniqueLocations.Count}");
             }
 
             lastPath.UniqueLocationsCount = lastPath.UniqueLocations.LongCount();
+            lastPath.UniqueLocations.Clear();
         }
 
         private void CalculateSteps(int currentLocationX, int currentLocationY, string direction, int steps, HashSet<long> uniqueLocations, out int newX, out int newY)

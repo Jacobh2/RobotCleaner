@@ -40,7 +40,7 @@ namespace RobotCleaner
                     if (square.Contains(_currentLocationX, _currentLocationY))
                     {
                         _currentRegion = region;
-                        region.SetIsStartRegion(true, _currentLocationX, _currentLocationY);
+                        region.SetIsStartRegion(_currentLocationX, _currentLocationY);
                     }
                     _regions.Add(region);
                 }
@@ -49,7 +49,14 @@ namespace RobotCleaner
 
         public long UniquePositionCount()
         {
-            return _regions.Sum(region => region.GetUniqueCount);
+            long sum = 0;
+            foreach (var region in _regions)
+            {
+                Console.WriteLine($"Region {region.Square} uniq: {region.GetUniqueCount}");
+                sum += region.GetUniqueCount;
+            }
+
+            return sum;
         }
 
         public Tuple<int, int> CurrentLocation => new Tuple<int, int>(_currentLocationX, _currentLocationY);
