@@ -53,6 +53,18 @@ namespace RobotCleaner
                 return;
             }
             Console.WriteLine($"Want to go {direction}{steps} from ({locationX},{locationY})");
+            Console.WriteLine($"_paths.Last for {Square.Left} START:{_paths.Last != null}");
+            if (_paths.Last != null)
+            {
+                /* Action: (10, 10) --> (20, 10)
+                 *
+                 * (10, 10) --> (11, 10)
+                 *
+                 *     
+                 *  
+                 */
+                Console.WriteLine($"{locationX} == {_paths.Last.Value.EndLocationX}  {locationY} {_paths.Last.Value.EndLocationY}");
+            }
             //We need to check if this is a new path or not.
             if (_paths.Last != null && locationX == _paths.Last.Value.EndLocationX && locationY == _paths.Last.Value.EndLocationY)
             {
@@ -62,10 +74,23 @@ namespace RobotCleaner
             }
             else
             {
-                Console.WriteLine("This is a new path");
-                //New path!
-                _paths.AddLast(new Path(locationX, locationY, direction, steps));
+                // Only add this path if it already does not exist
+                Path newPath = new Path(locationX, locationY, direction, steps);
+                Console.WriteLine($"New path {newPath} already exist: {_paths.Contains(newPath)}");
+                if (!_paths.Contains(newPath))
+                {
+                    Console.WriteLine("This is a new path");
+                    //New path!
+                    _paths.AddLast(newPath);    
+                }
+                else
+                {
+                    Console.WriteLine($"THIS PATH ALREADY EXIST!!");
+                }
+                
             }
+            Console.WriteLine($"_paths.Last for {Square.Top} END:{_paths.Last != null}");
+            
             CalculateUniqueCount(out newLocationX, out newLocationY);
         }
 

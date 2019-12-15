@@ -48,9 +48,11 @@ namespace RobotCleaner
                     
                     int upperLeftCornerY = MinGridPosition + GridSize * y;
                     Square square = new Square(upperLeftCornerX+ offsetX, upperLeftCornerY+offsetY, upperLeftCornerX + GridSize, upperLeftCornerY + GridSize);
+                    Console.WriteLine($"SQUARE: {square}");
                     Region region = new Region(square, MaxGridPosition);
                     if (square.Contains(startCoordinateX, startCoordinateY))
                     {
+                        Console.WriteLine($"SQUARE: {square} is current");
                         _currentRegion = region;
                         region.SetIsStartRegion(true, startCoordinateX, startCoordinateY);
                     }
@@ -117,6 +119,7 @@ namespace RobotCleaner
 
             while(steps > 0)
             {
+                Console.WriteLine($"Execute, region is current: {_currentRegion.Square}");
                 stepsAllowed = CalculateAllowedSteps(direction, steps, out newX, out newY);
 
                 if (stepsAllowed == 0)

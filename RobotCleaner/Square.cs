@@ -24,5 +24,10 @@ namespace RobotCleaner
         {
             return _topX <= x && x <= _bottomX && _topY <= y && y <= _bottomY;
         }
+
+        public override string ToString()
+        {
+            return $"{{{Left},{Top},{Right},{Bottom}}}";
+        }
     }
 }

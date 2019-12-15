@@ -119,15 +119,18 @@ namespace RobotCleaner.Test
             robot.Execute("E", 100_000);
             robot.Execute("E", 100_000);
             robot.Execute("S", 75_000);
+            
             robot.Execute("W", 50_000);
             robot.Execute("N", 50_000);
             robot.Execute("E", 60_000);
+            
             robot.Execute("N", 50_000);
             robot.Execute("W", 80_000);
             robot.Execute("S", 95_000);
+            
             robot.Execute("E", 10_000);
 
-            Assert.Equal(635001, robot.UniquePositionCount());
+            Assert.Equal(530000, robot.UniquePositionCount());
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
         
@@ -151,7 +154,7 @@ namespace RobotCleaner.Test
         [Fact]
         public void Use10000Steps()
         {
-            int numberOfSteps = 10000;
+            int numberOfSteps = 1;
             Robot robot = new Robot(0, 0);
             Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
 
