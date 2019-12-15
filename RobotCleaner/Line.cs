@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace RobotCleaner
 {
@@ -12,57 +11,29 @@ namespace RobotCleaner
         private readonly HashSet<short> _checkedIntersect = new HashSet<short>();
         private readonly HashSet<short> _checkedOverlapping = new HashSet<short>();
 
-        public Point Start;
-        public Point End;
-        public int DeltaY;
-        public int DeltaX;
-        public int C;
-        public int Length;
-        public bool MovingX;
-        private int _dx;
-        private int _dy;
+        private Point _start;
+        private Point _end;
+        private readonly int _deltaY;
+        private readonly int _deltaX;
+        private readonly int _c;
+        public readonly int Length;
+        private readonly bool _movingX;
+        private readonly int _dx;
+        private readonly int _dy;
 
         public Line(int startX, int startY, int endX, int endY, int dx, int dy, short id)
         {
             Id = id;
-            Start = new Point(startX, startY);
-            End = new Point(endX, endY);
+            _start = new Point(startX, startY);
+            _end = new Point(endX, endY);
             // For a line DeltaY * x + DeltaX * y = C
-            DeltaY = End.Y - Start.Y;
-            DeltaX = End.X - Start.X;
-            C = DeltaY * Start.X + DeltaX * Start.Y;
-            Length = Math.Abs(End.Y - Start.Y) + Math.Abs(End.X - Start.X) + 1;
-            MovingX = Start.X != End.X;
+            _deltaY = _end.Y - _start.Y;
+            _deltaX = _end.X - _start.X;
+            _c = _deltaY * _start.X + _deltaX * _start.Y;
+            Length = Math.Abs(_end.Y - _start.Y) + Math.Abs(_end.X - _start.X) + 1;
+            _movingX = _start.X != _end.X;
             _dx = dx;
             _dy = dy;
-        }
-
-        public int OverlappingFor(Line other)
-        {
-            if (ParallelDelta(other) != 0)
-            {    
-                Console.WriteLine("Not parallel");
-                return 0;
-            }
-            // Parallel, calculate how much they overlap
-            if (MovingX)
-            {
-                Console.WriteLine("Moving X");
-                
-                if (Start.Y != other.Start.Y) return 0;
-                
-                Console.WriteLine("Moving along X axis");
-                // Along x axis, calculate how much overlap
-                return Overlap(Start.X, End.X, other.Start.X, other.End.X);
-            }
-            Console.WriteLine("Moving Y");
-            
-            if (Start.X != other.Start.X) return 0;
-            
-            Console.WriteLine("Moving along Y axis");
-            //Along Y axis, calculata how much the overlap
-            return Overlap(Start.Y, End.Y, other.Start.Y, other.End.Y);
-
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,21 +48,58 @@ namespace RobotCleaner
             return first < second ? first : second;
         }
 
-        private int Overlap(int thisStart, int thisEnd, int otherStart, int otherEnd)
-        {
-            int thisMax = GetMax(thisStart, thisEnd);
-            int thisMin = GetMin(thisStart, thisEnd);
-            
-            int otherMax = GetMax(otherStart, otherEnd);
-            int otherMin = GetMin(otherStart, otherEnd);
-
-            return GetMax(0, GetMin(thisMax, otherMax) - GetMax(thisMin, otherMin));
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int ParallelDelta(Line other)
         {
-            return DeltaY * other.DeltaX - other.DeltaY * DeltaX;
+            return _deltaY * other._deltaX - other._deltaY * _deltaX;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private long GetHash(long x, long y)
+        {
+            return (x+100_000)*1_000_000 + y + 100_000;
+        }
+
+        private void AddXCoordinates(Line other, HashSet<long> overlapping)
+        {
+            int thisLow = GetMin(_start.X, _end.X);
+            int thisHigh = GetMax(_start.X, _end.X);
+            int otherLow = GetMin(other._start.X, other._end.X);
+            int otherHigh = GetMax(other._start.X, other._end.X);
+                
+            int startX = thisLow;
+            int stepsX = otherHigh - thisLow + 1;
+            if (thisLow < otherLow)
+            {
+                startX = otherLow;
+                stepsX = thisHigh - otherLow + 1;
+            }
+                
+            for (int i = 0; i < stepsX; ++i)
+            {
+                overlapping.Add(GetHash(startX + i * _dx, _start.Y));
+            }
+        }
+
+        private void AddYCoordinates(Line other, HashSet<long> overlapping)
+        {
+            int thisLow = GetMin(_start.Y, _end.Y);
+            int otherLow = GetMin(other._start.Y, other._end.Y);
+            int thisHigh = GetMax(_start.Y, _end.Y);
+            int otherHigh = GetMax(other._start.Y, other._end.Y);
+                
+            int startY = thisLow;
+            int stepsY = otherHigh - thisLow + 1;
+            if (thisLow < otherLow)
+            {
+                startY = otherLow;
+                stepsY = thisHigh - otherLow + 1;
+            }
+                
+            for (int i = 0; i < stepsY; ++i)
+            {
+                overlapping.Add(GetHash(_start.X, startY + i * _dy));
+            }
         }
         
         public bool Intersect(Line other, out int x, out int y)
@@ -108,123 +116,47 @@ namespace RobotCleaner
             if (delta == 0)
                 return false;
             
-            x = (other.DeltaX * C - DeltaX * other.C) / delta;
-            y = (DeltaY * other.C - other.DeltaY * C) / delta;
+            x = (other._deltaX * _c - _deltaX * other._c) / delta;
+            y = (_deltaY * other._c - other._deltaY * _c) / delta;
             return Inside(x,y) && other.Inside(x, y);
         }
         
         private bool Inside(int x, int y){
-            bool inY;
-            bool inX;
-            if (Start.Y > End.Y)
-            {
-                inY = End.Y <= y && y <= Start.Y;
-            }
-            else
-            {
-                inY = Start.Y <= y && y <= End.Y;
-            }
+            int minY = GetMin(_start.Y, _end.Y);
+            int maxY = GetMax(_start.Y, _end.Y);
+            bool inY = minY <= y && y <= maxY;
             
-            if (Start.X > End.X)
-            {
-                inX = End.X <= x && x <= Start.X;
-            }
-            else
-            {
-                inX = Start.X <= x && x <= End.X;
-            }
+            int minX = GetMin(_start.X, _end.X);
+            int maxX = GetMax(_start.X, _end.X);
+            bool inX = minX <= x && x <= maxX;
             return inX && inY;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long GetHash(long x, long y)
-        {
-            return (x+100_000)*1_000_000 + y + 100_000;
-        }
+        
 
-        public void AddCoordinates(HashSet<long> counted)
-        {
-            int stepsX = GetMax(Start.X, End.X) - GetMin(Start.X, End.X);
-            int stepsY = GetMax(Start.Y, End.Y) - GetMin(Start.Y, End.Y);
-            
-            for (int i = 1; i < stepsX; ++i)
-            {
-                counted.Add(GetHash(Start.X + i * _dx, Start.Y));
-            }
-
-            for (int i = 1; i < stepsY; ++i)
-            {
-                counted.Add(GetHash(Start.X, Start.Y + i * _dy));
-            }
-        }
-
-        public void AddOverlappingCoordinates(Line other, HashSet<long> counted)
+        public void AddOverlappingCoordinates(Line other, HashSet<long> overlapping)
         {
             if (_checkedOverlapping.Contains(other.Id) || other._checkedOverlapping.Contains(Id)){
-                Console.WriteLine($"Line {Id} has already been checked against {other.Id}");
                 return;
             }
             
-            Console.WriteLine($"Adding {other.Id} as checked against {Id}");
             _checkedOverlapping.Add(other.Id);
             
             if (ParallelDelta(other) != 0)
             {    
                 return;
             }
-            // Parallel, calculate how much they overlap
-            if (MovingX)
+            
+            if (_movingX)
             {
-                Console.WriteLine("Moving X");
-                
-                if (Start.Y != other.Start.Y) return;
-                
-                Console.WriteLine("Moving along X axis");
-                // Get the left/top line and the bottom/right line
-
-                int thisLow = GetMin(Start.X, End.X);
-                int otherLow = GetMin(other.Start.X, other.End.X);
-                int thisHigh = GetMax(Start.X, End.X);
-                int otherHigh = GetMax(other.Start.X, other.End.X);
-                
-                int startX = thisLow;
-                int stepsX = otherHigh - thisLow + 1;
-                if (thisLow < otherLow)
-                {
-                    startX = otherLow;
-                    stepsX = thisHigh - otherLow + 1;
-                }
-                
-                for (int i = 0; i < stepsX; ++i)
-                {
-                    Console.WriteLine($"    >> ({startX + i * _dx}, {Start.Y})");
-                    counted.Add(GetHash(startX + i * _dx, Start.Y));
-                }
-
+                if (_start.Y != other._start.Y) return;
+                AddXCoordinates(other, overlapping);                
                 return;
             }
-            Console.WriteLine("Moving Y");
             
-            if (Start.X != other.Start.X) return;
-            
-            int thisLowY = GetMin(Start.Y, End.Y);
-            int otherLowY = GetMin(other.Start.Y, other.End.Y);
-            int thisHighY = GetMax(Start.Y, End.Y);
-            int otherHighY = GetMax(other.Start.Y, other.End.Y);
-                
-            int startY = thisLowY;
-            int stepsY = otherHighY - thisLowY + 1;
-            if (thisLowY < otherLowY)
-            {
-                startY = otherLowY;
-                stepsY = thisHighY - otherLowY + 1;
-            }
-                
-            for (int i = 0; i < stepsY; ++i)
-            {
-                Console.WriteLine($"    >> ({Start.X}, {startY + i * _dy})");
-                counted.Add(GetHash(Start.X, startY + i * _dy));
-            }
+            if (_start.X != other._start.X) return;
+
+            AddYCoordinates(other, overlapping);
         }
     }
 }

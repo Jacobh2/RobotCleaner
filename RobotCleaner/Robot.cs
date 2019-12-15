@@ -34,11 +34,9 @@ namespace RobotCleaner
             HashSet<long> counted = new HashSet<long>();
             foreach (Line lineA in _lines)
             {
-                Console.WriteLine($"\n>>> Line {lineA.Id} Length: {lineA.Length}. Sum={sum}");
                 sum += lineA.Length;
                 counted.Clear();
                 
-                //lineA.AddCoordinates(counted);
                 foreach (Line lineB in _lines)
                 {
                     // Don't check against ourselves
@@ -47,24 +45,17 @@ namespace RobotCleaner
                         continue;
                     }
                     
-                    Console.WriteLine($" *** Comparing to {lineB.Id} *** ");
                     if (lineA.Intersect(lineB, out int x, out int y))
                     {
-                        Console.WriteLine($"Intersect at ({x},{y})");
-                        //sum -= 1;
                         counted.Add(GetHash(x, y));
                     }
                     else
                     {
-                        Console.WriteLine("Overlapping!");
                         lineA.AddOverlappingCoordinates(lineB, counted);
-                        Console.WriteLine($"Counted 2 {counted.Count}");
                     }
                 }
-                Console.WriteLine($"Will remove {counted.Count}");
                 sum -= counted.Count;
             }
-            
             return sum;
         }
 
