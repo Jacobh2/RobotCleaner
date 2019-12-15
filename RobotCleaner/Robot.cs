@@ -20,41 +20,27 @@ namespace RobotCleaner
         {
             _currentLocationX = startCoordinateX;
             _currentLocationY = startCoordinateY;
+            CreateRegions();
+        }
 
-            int offsetX;
-            int offsetY;
+        private void CreateRegions()
+        {
             for (int x = 0; x < NumberOfRegionsWide; ++x)
             {
                 int upperLeftCornerX = MinGridPosition + GridSize * x;
-                if (x >= 1)
-                {
-                    offsetX = 1;
-                }
-                else
-                {
-                    offsetX = 0;
-                }
+                var offsetX = x >= 1 ? 1 : 0;
                 for (int y = 0; y < NumberOfRegionsWide; ++y)
                 {
-                    
-                    if (y >= 1)
-                    {
-                        offsetY = 1;
-                    }
-                    else
-                    {
-                        offsetY = 0;
-                    }
+                    var offsetY = y >= 1 ? 1 : 0;
                     
                     int upperLeftCornerY = MinGridPosition + GridSize * y;
                     Square square = new Square(upperLeftCornerX+ offsetX, upperLeftCornerY+offsetY, upperLeftCornerX + GridSize, upperLeftCornerY + GridSize);
-                    Console.WriteLine($"SQUARE: {square}");
                     Region region = new Region(square, MaxGridPosition);
-                    if (square.Contains(startCoordinateX, startCoordinateY))
+                    
+                    if (square.Contains(_currentLocationX, _currentLocationY))
                     {
-                        Console.WriteLine($"SQUARE: {square} is current");
                         _currentRegion = region;
-                        region.SetIsStartRegion(true, startCoordinateX, startCoordinateY);
+                        region.SetIsStartRegion(true, _currentLocationX, _currentLocationY);
                     }
                     _regions.Add(region);
                 }
@@ -68,14 +54,14 @@ namespace RobotCleaner
 
         public Tuple<int, int> CurrentLocation => new Tuple<int, int>(_currentLocationX, _currentLocationY);
 
-        private Region GetRegion(int x, int y)
+        private Region GetRegionForLocation(int x, int y)
         {
             return _regions.FirstOrDefault(region => region.Square.Contains(x, y));
         }
 
-        private bool SetNext(int newX, int newY)
+        private bool UpdateCurrentRegionForLocation(int newX, int newY)
         {
-            Region nextRegion = GetRegion(newX, newY);
+            Region nextRegion = GetRegionForLocation(newX, newY);
             if (nextRegion == null)
             {
                 return false;
@@ -113,18 +99,14 @@ namespace RobotCleaner
 
         public void Execute(string direction, int steps)
         {
-            int stepsAllowed;
-            int newX;
-            int newY;
-
             while(steps > 0)
             {
                 Console.WriteLine($"Execute, region is current: {_currentRegion.Square}");
-                stepsAllowed = CalculateAllowedSteps(direction, steps, out newX, out newY);
+                var stepsAllowed = CalculateAllowedSteps(direction, steps, out int newX, out int newY);
 
                 if (stepsAllowed == 0)
                 {
-                    if (SetNext(newX, newY))
+                    if (UpdateCurrentRegionForLocation(newX, newY))
                     {
                         continue;
                     }
@@ -135,7 +117,7 @@ namespace RobotCleaner
                 
                 steps -= stepsAllowed;
                 
-                if (!SetNext(_currentLocationX, _currentLocationY))
+                if (!UpdateCurrentRegionForLocation(_currentLocationX, _currentLocationY))
                 {
                     return;
                 }

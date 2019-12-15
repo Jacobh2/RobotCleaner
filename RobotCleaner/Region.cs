@@ -12,11 +12,13 @@ namespace RobotCleaner
         private const int DirectionPositive = 1;
         private const int DirectionNegative = -1;
         private readonly int _maxGridPosition;
+        
         public Square Square { get; }
         private readonly bool _isEdgeX;
         private readonly bool _isEdgeY;
+        
         private readonly LinkedList<Path> _paths = new LinkedList<Path>();
-        private bool _isStartRegion = false;
+        private bool _isStartRegion;
         private Tuple<int, int> _startPosition;
 
         public Region(Square square, int maxGridPosition)
@@ -51,19 +53,6 @@ namespace RobotCleaner
                 newLocationX = locationX;
                 newLocationY = locationY;
                 return;
-            }
-            Console.WriteLine($"Want to go {direction}{steps} from ({locationX},{locationY})");
-            Console.WriteLine($"_paths.Last for {Square.Left} START:{_paths.Last != null}");
-            if (_paths.Last != null)
-            {
-                /* Action: (10, 10) --> (20, 10)
-                 *
-                 * (10, 10) --> (11, 10)
-                 *
-                 *     
-                 *  
-                 */
-                Console.WriteLine($"{locationX} == {_paths.Last.Value.EndLocationX}  {locationY} {_paths.Last.Value.EndLocationY}");
             }
             //We need to check if this is a new path or not.
             if (_paths.Last != null && locationX == _paths.Last.Value.EndLocationX && locationY == _paths.Last.Value.EndLocationY)

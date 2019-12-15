@@ -154,23 +154,22 @@ namespace RobotCleaner.Test
         [Fact]
         public void Use10000Steps()
         {
-            int numberOfSteps = 1;
             Robot robot = new Robot(0, 0);
             Tuple<int, int> finalLocation = new Tuple<int, int>(80861, 100000);
 
             Random rnd = new Random(1337);
             string[] directions = new string[] { "E", "W", "S", "N" };
-            int[] directionIndex = Enumerable.Range(0, numberOfSteps)
+            int[] directionIndex = Enumerable.Range(0, 10000)
                 .Select(i => rnd.Next(0, 3)).ToArray();
 
-            int[] steps = Enumerable.Range(0, numberOfSteps).Select(i => rnd.Next(0, 100000)).ToArray();
+            int[] steps = Enumerable.Range(0, 10000).Select(i => rnd.Next(0, 100000)).ToArray();
 
-            for (int i = 0; i < numberOfSteps; ++i)
+            for (int i = 0; i < 10000; ++i)
             {
                 robot.Execute(directions[directionIndex[i]], steps[i]);
             }
-            
-            Assert.Equal(169373070, robot.UniquePositionCount());
+
+            Assert.Equal(400001, robot.UniquePositionCount());
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
     }
