@@ -8,18 +8,21 @@ namespace RobotCleaner
     public class Line
     {
         public short Id;
-        private readonly HashSet<short> _checkedIntersect = new HashSet<short>();
-        private readonly HashSet<short> _checkedOverlapping = new HashSet<short>();
+        private readonly HashSet<short> _checked = new HashSet<short>();
 
         private Point _start;
         private Point _end;
-        private readonly int _deltaY;
-        private readonly int _deltaX;
-        private readonly int _c;
+        private readonly long _deltaY;
+        private readonly long _deltaX;
+        private readonly long _c;
         public readonly int Length;
         private readonly bool _movingX;
         private readonly int _dx;
         private readonly int _dy;
+        private readonly int _minX;
+        private readonly int _maxX;
+        private readonly int _minY;
+        private readonly int _maxY;
 
         public Line(int startX, int startY, int endX, int endY, int dx, int dy, short id)
         {
@@ -27,11 +30,20 @@ namespace RobotCleaner
             _start = new Point(startX, startY);
             _end = new Point(endX, endY);
             // For a line DeltaY * x + DeltaX * y = C
-            _deltaY = _end.Y - _start.Y;
-            _deltaX = _end.X - _start.X;
-            _c = _deltaY * _start.X + _deltaX * _start.Y;
-            Length = Math.Abs(_end.Y - _start.Y) + Math.Abs(_end.X - _start.X) + 1;
-            _movingX = _start.X != _end.X;
+            _minX = GetMin(startX, endX);
+            _maxX = GetMax(startX, endX);
+            _minY = GetMin(startY, endY);
+            _maxY = GetMax(startY, endY);
+            _deltaX = endX - startX;
+            _deltaY = endY - startY;
+            _c = _deltaY * startX + _deltaX * startY;
+            
+            Length = (_maxX - _minX) + (_maxY - _minY) + 1;
+            if (Length < 0)
+            {
+                throw new Exception("Length is negative");
+            }
+            _movingX = startX != endX;
             _dx = dx;
             _dy = dy;
         }
@@ -49,114 +61,128 @@ namespace RobotCleaner
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int ParallelDelta(Line other)
+        private long ParallelDelta(Line other)
         {
             return _deltaY * other._deltaX - other._deltaY * _deltaX;
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long GetHash(long x, long y)
-        {
-            return (x+100_000)*1_000_000 + y + 100_000;
-        }
 
-        private void AddXCoordinates(Line other, HashSet<long> overlapping)
+        public int AmountOverlapXAxis(Line other)
         {
-            int thisLow = GetMin(_start.X, _end.X);
-            int thisHigh = GetMax(_start.X, _end.X);
-            int otherLow = GetMin(other._start.X, other._end.X);
-            int otherHigh = GetMax(other._start.X, other._end.X);
-                
-            int startX = thisLow;
-            int stepsX = otherHigh - thisLow + 1;
-            if (thisLow < otherLow)
-            {
-                startX = otherLow;
-                stepsX = thisHigh - otherLow + 1;
+            if (_maxX < other._minX || other._maxX < _minX){
+                return 0;
             }
-                
-            for (int i = 0; i < stepsX; ++i)
+            if (_minX == other._minX)
             {
-                overlapping.Add(GetHash(startX + i * _dx, _start.Y));
+                return GetMin(_maxX, other._maxX) - _minX;
             }
-        }
-
-        private void AddYCoordinates(Line other, HashSet<long> overlapping)
-        {
-            int thisLow = GetMin(_start.Y, _end.Y);
-            int otherLow = GetMin(other._start.Y, other._end.Y);
-            int thisHigh = GetMax(_start.Y, _end.Y);
-            int otherHigh = GetMax(other._start.Y, other._end.Y);
-                
-            int startY = thisLow;
-            int stepsY = otherHigh - thisLow + 1;
-            if (thisLow < otherLow)
+            if (_maxX == other._maxX)
             {
-                startY = otherLow;
-                stepsY = thisHigh - otherLow + 1;
+                return _maxX - GetMax(_minX, other._minX);
             }
-                
-            for (int i = 0; i < stepsY; ++i)
+            if (_minX < other._minX)
             {
-                overlapping.Add(GetHash(_start.X, startY + i * _dy));
+                return _maxX - other._minX;
             }
+            return other._maxX - _minX;
         }
         
-        public bool Intersect(Line other, out int x, out int y)
+        public int AmountOverlapYAxis(Line other)
         {
-            x = -1;
-            y = -1;
-            if (_checkedIntersect.Contains(other.Id) || other._checkedIntersect.Contains(Id))
-                return false;
-
-            _checkedIntersect.Add(other.Id);
-
-            int delta = ParallelDelta(other);
-            
-            if (delta == 0)
-                return false;
-            
-            x = (other._deltaX * _c - _deltaX * other._c) / delta;
-            y = (_deltaY * other._c - other._deltaY * _c) / delta;
-            return Inside(x,y) && other.Inside(x, y);
+            if (_maxY < other._minY || other._maxY < _minY){
+                return 0;
+            }
+            if (_minY == other._minY)
+            {
+                return GetMin(_maxY, other._maxY) - _minY;
+            }
+            if (_maxY == other._maxY)
+            {
+                return _maxY - GetMax(_minY, other._minY);
+            }
+            if (_minY < other._minY)
+            {
+                return _maxY - other._minY;
+            }
+            return other._maxY - _minY;
         }
         
-        private bool Inside(int x, int y){
-            int minY = GetMin(_start.Y, _end.Y);
-            int maxY = GetMax(_start.Y, _end.Y);
-            bool inY = minY <= y && y <= maxY;
-            
-            int minX = GetMin(_start.X, _end.X);
-            int maxX = GetMax(_start.X, _end.X);
-            bool inX = minX <= x && x <= maxX;
-            return inX && inY;
-        }
-        
-        
-
-        public void AddOverlappingCoordinates(Line other, HashSet<long> overlapping)
+        private void AddXCoordinates(Line other, LineLight overlapping)
         {
-            if (_checkedOverlapping.Contains(other.Id) || other._checkedOverlapping.Contains(Id)){
+            int stepsX = AmountOverlapXAxis(other);
+            if (stepsX == 0)
+            {
                 return;
             }
+            int startX =_minX < other._minX ? other._minX : _minX;
+            overlapping.Add(new Point(startX, _start.Y), new Point(startX + stepsX, _start.Y));
+        }
+
+        private void AddYCoordinates(Line other, LineLight overlapping)
+        {
+            int stepsY = AmountOverlapYAxis(other);
+            if (stepsY == 0)
+            {
+                return;
+            }
+            int startY =_minY < other._minY ? other._minY : _minY;
+            overlapping.Add(new Point(_start.X, startY), new Point(_start.X, startY + stepsY));
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool Inside(int x, int y){
+            return _minY <= y && y <= _maxY && _minX <= x && x <= _maxX;
+        }
+
+        public void AddOverlappingCoordinates(Line other, LineLight overlapping)
+        {
+            /* 1. Are they parallel?
+             *     -> YES:
+             *         1.How much do they overlap
+             *     -> NO:
+             *         1. Remove 1 where they intersect
+             * 
+             */
+            _checked.Add(other.Id);
             
-            _checkedOverlapping.Add(other.Id);
+            long delta = ParallelDelta(other);
             
-            if (ParallelDelta(other) != 0)
-            {    
+            if (delta != 0)
+            {
+                int x = (int) ((other._deltaX * _c - _deltaX * other._c) / delta);
+                int y = (int) ((_deltaY * other._c - other._deltaY * _c) / delta);
+                //Console.WriteLine($"Lines not parallel! ({x},{y})");
+                if (Inside(x, y) && other.Inside(x, y))
+                {
+                    //Console.WriteLine($"They are touching");
+                    overlapping.Add(new Point(x, y), new Point(x, y));
+                }
                 return;
             }
             
             if (_movingX)
             {
                 if (_start.Y != other._start.Y) return;
-                AddXCoordinates(other, overlapping);                
+                AddXCoordinates(other, overlapping);
                 return;
             }
             
             if (_start.X != other._start.X) return;
-
             AddYCoordinates(other, overlapping);
+        }
+
+        public override string ToString()
+        {
+            return $"L({_start},{_end})";
+        }
+
+        public bool AlreadyChecked(Line other)
+        {
+            return _checked.Contains(other.Id) || other._checked.Contains(Id);
+        }
+
+        public void Clear()
+        {
+            _checked.Clear();
         }
     }
 }

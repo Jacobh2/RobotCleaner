@@ -13,8 +13,8 @@ float y = (A1 * C2 - A2 * C1) / delta;
 """
 
 
-lineA = ((-1,2), (2,2))
-lineB = ((1,2), (3, 2))
+lineA = ((0,0), (100000,0))
+lineB = ((50000,0), (50000, 75000))
 
 def inside(Y, X, y, x):
     if Y[0] > Y[1]:
@@ -49,7 +49,7 @@ def intersect(line_a, line_b):
     if delta == 0:
         print("Lines are parallel")
         return False
-
+    print("delta:", delta)
     x = (B2 * C1 - B1 * C2) / delta
     y = (A1 * C2 - A2 * C1) / delta
     print("x", x, "y", y)
@@ -60,5 +60,5 @@ def overlap(min1, max1, min2, max2):
     return max(0, min(max1, max2) - max(min1, min2))
 
 if __name__ == "__main__":
-    print(intersect(lineA, lineA))
-    print(overlap(2, -1, 1, 3))
+    print(intersect(lineA, lineB))
+    #print(overlap(2, -1, 1, 3))

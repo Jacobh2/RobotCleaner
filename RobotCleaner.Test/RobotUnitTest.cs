@@ -135,6 +135,23 @@ namespace RobotCleaner.Test
         }
         
         [Fact]
+        public void TestNew()
+        {
+            Robot robot = new Robot(0, 0);
+            Tuple<int, int> finalLocation = new Tuple<int, int>(0,0);
+
+            robot.Execute("E", 20);
+            robot.Execute("N", 10);
+            robot.Execute("W", 10);
+            
+            robot.Execute("S", 10);
+            robot.Execute("W", 10);
+
+            Assert.Equal(50, robot.UniquePositionCount());
+            Assert.Equal(finalLocation, robot.CurrentLocation);
+        }
+        
+        [Fact]
         public void TestLongSteps2()
         {
             Robot robot = new Robot(0, 0);
@@ -191,5 +208,57 @@ namespace RobotCleaner.Test
             Assert.Equal(finalLocation, robot.CurrentLocation);
         }
         */
+        
+        
+        [Fact]
+        public void TwoOverlappingLinesAIsLeftMost()
+        {
+            Line lineA = new Line(0,0,10,0, 1, 1, 0);
+            Line lineB = new Line(5,0,15,0, 1, 1, 1);
+            int expectedOverlap = 5;
+            Assert.Equal(expectedOverlap, lineA.AmountOverlapXAxis(lineB));
+        }
+        
+        [Fact]
+        public void TwoOverlappingLinesAIsRighMost()
+        {
+            Line lineA = new Line(5,0,15,0, 1, 1, 1);
+            Line lineB = new Line(0,0,10,0, 1, 1, 0);
+            int expectedOverlap = 5;
+            Assert.Equal(expectedOverlap, lineA.AmountOverlapXAxis(lineB));
+        }
+        [Fact]
+        public void TwoOverlappingLinesAIsSame()
+        {
+            Line lineA = new Line(0,0,5,0, 1, 1, 0);
+            Line lineB = new Line(0,0,5,0, 1, 1, 1);
+            int expectedOverlap = 5;
+            Assert.Equal(expectedOverlap, lineA.AmountOverlapXAxis(lineB));
+        }
+        
+        [Fact]
+        public void TwoOverlappingLinesAShorterSameStart()
+        {
+            Line lineA = new Line(0,0,2,0, 1, 1, 0);
+            Line lineB = new Line(0,0,3,0, 1, 1, 1);
+            int expectedOverlap = 2;
+            Assert.Equal(expectedOverlap, lineA.AmountOverlapXAxis(lineB));
+        }
+        [Fact]
+        public void TwoOverlappingLinesAShorterSameEnd()
+        {
+            Line lineA = new Line(1,0,3,0, 1, 1, 0);
+            Line lineB = new Line(0,0,3,0, 1, 1, 1);
+            int expectedOverlap = 2;
+            Assert.Equal(expectedOverlap, lineA.AmountOverlapXAxis(lineB));
+        }
+        [Fact]
+        public void TwoLinesNotOverlapping()
+        {
+            Line lineA = new Line(1,0,3,0, 1, 1, 0);
+            Line lineB = new Line(3,0,5,0, 1, 1, 1);
+            int expectedOverlap = 0;
+            Assert.Equal(expectedOverlap, lineA.AmountOverlapXAxis(lineB));
+        }
     }
 }

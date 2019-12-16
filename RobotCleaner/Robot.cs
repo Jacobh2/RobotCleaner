@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 
 namespace RobotCleaner
@@ -28,14 +29,24 @@ namespace RobotCleaner
             return (x+100_000)*1_000_000 + y + 100_000;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int LineLength(Tuple<Point, Point> line)
+        {
+            return line.Item1.X == line.Item2.X
+                ? Math.Abs(line.Item2.Y - line.Item1.Y) + 1
+                : Math.Abs(line.Item2.X - line.Item1.X) + 1;
+        }
+
         public long UniquePositionCount()
         {
             long sum = 0;
-            HashSet<long> counted = new HashSet<long>();
+            LineLight counted = new LineLight();
             foreach (Line lineA in _lines)
             {
-                sum += lineA.Length;
+                Console.WriteLine($" \n *** CHECKING LINE {lineA.Id} l={lineA.Length}. sum={sum}*** ");
+                Console.WriteLine($"This: {lineA}, new sum={sum + lineA.Length}");
                 counted.Clear();
+                sum += lineA.Length;
                 
                 foreach (Line lineB in _lines)
                 {
@@ -44,18 +55,25 @@ namespace RobotCleaner
                     {
                         continue;
                     }
+
+                    if (lineA.AlreadyChecked(lineB))
+                    {
+                        continue;
+                    }
                     
-                    if (lineA.Intersect(lineB, out int x, out int y))
-                    {
-                        counted.Add(GetHash(x, y));
-                    }
-                    else
-                    {
-                        lineA.AddOverlappingCoordinates(lineB, counted);
-                    }
+                    Console.WriteLine($"Comparing against {lineB} - {counted.Count}");
+                    
+                    lineA.AddOverlappingCoordinates(lineB, counted);
+                    Console.WriteLine($"Count: {counted.Count}");
                 }
-                sum -= counted.Count;
+                
+                foreach (Tuple<Point, Point> duplicateLine in counted)
+                {
+                    Console.WriteLine($"Will remove {duplicateLine}: {LineLength(duplicateLine)}");
+                    sum -= LineLength(duplicateLine);
+                }
             }
+
             return sum;
         }
 
